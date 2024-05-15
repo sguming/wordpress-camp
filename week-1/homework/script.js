@@ -1,23 +1,61 @@
 // script.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    const cells = document.querySelectorAll('.cell');
-    const statusText = document.getElementById('status');
-    const restartButton = document.getElementById('restart');
+    const boardSize = 3; // Change this to generate a different board size
     let currentPlayer = 'X';
-    let board = ['', '', '', '', '', '', '', '', ''];
+    let board = Array(boardSize * boardSize).fill('');
     let gameActive = true;
 
-    const winningConditions = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
+    const cells = [];
+    const statusText = document.getElementById('status');
+    const restartButton = document.getElementById('restart');
+    const gameBoard = document.getElementById('game-board');
+
+    const createBoard = () => {
+        gameBoard.style.gridTemplateColumns = `repeat(${boardSize}, 100px)`;
+        gameBoard.style.gridTemplateRows = `repeat(${boardSize}, 100px)`;
+        for (let i = 0; i < boardSize * boardSize; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.setAttribute('data-index', i);
+            cell.addEventListener('click', handleCellClick);
+            gameBoard.appendChild(cell);
+            cells.push(cell);
+        }
+    };
+
+    const generateWinningConditions = (size) => {
+        const conditions = [];
+        for (let i = 0; i < size; i++) {
+            // Rows
+            const row = [];
+            for (let j = 0; j < size; j++) {
+                row.push(i * size + j);
+            }
+            conditions.push(row);
+
+            // Columns
+            const col = [];
+            for (let j = 0; j < size; j++) {
+                col.push(j * size + i);
+            }
+            conditions.push(col);
+        }
+
+        // Diagonals
+        const diag1 = [];
+        const diag2 = [];
+        for (let i = 0; i < size; i++) {
+            diag1.push(i * size + i);
+            diag2.push(i * size + (size - 1 - i));
+        }
+        conditions.push(diag1);
+        conditions.push(diag2);
+
+        return conditions;
+    };
+
+    const winningConditions = generateWinningConditions(boardSize);
 
     const handleCellClick = (event) => {
         const clickedCell = event.target;
@@ -139,8 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkWin = () => {
         for (const condition of winningConditions) {
-            const [a, b, c] = condition;
-            if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            if (condition.every(index => board[index] === currentPlayer)) {
                 return true;
             }
         }
@@ -149,14 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const restartGame = () => {
         currentPlayer = 'X';
-        board = ['', '', '', '', '', '', '', '', ''];
+        board = Array(boardSize * boardSize).fill('');
         gameActive = true;
         statusText.textContent = `It's ${currentPlayer}'s turn`;
         cells.forEach(cell => cell.textContent = '');
     };
 
-    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    createBoard();
     restartButton.addEventListener('click', restartGame);
-
     statusText.textContent = `It's ${currentPlayer}'s turn`;
 });
